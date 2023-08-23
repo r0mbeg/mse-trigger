@@ -80,6 +80,17 @@ CREATE TRIGGER INFOMSEXP_INSERT BEFORE INSERT ON INFOMSEXP BEGIN SELECT CASE
             AND (new.ELEMENT_VALUE = '' OR new.ELEMENT_VALUE = ' ' OR new.ELEMENT_VALUE = '&nbsp;')
         ) THEN RAISE(ABORT, '[sql-debug] Нет поля пол (п. 08)')
         
+		
+		WHEN (
+            (new.MSE_END = 'Y')
+            AND (new.ELEMENT_NAME = '11.2')
+            AND ((new.ELEMENT_VALUE = '' OR new.ELEMENT_VALUE = ' ' OR new.ELEMENT_VALUE = '&nbsp;') OR 
+			NEW.ELEMENT_VALUE <> CAST(NEW.ELEMENT_VALUE AS INT) OR 
+			CAST(NEW.ELEMENT_VALUE AS INT) > 999999 OR 
+			CAST(NEW.ELEMENT_VALUE AS INT) < 100000)
+        ) THEN RAISE(ABORT, '[sql-debug] Почтовый индекс должен состоять из 6 цифр!')
+        
+		
         WHEN (
             (new.MSE_END = 'Y')
             AND (new.ELEMENT_NAME = '15')
