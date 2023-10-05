@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS verify_mse;
 DROP TRIGGER IF EXISTS INFOMSEXP_INSERT;
 CREATE TRIGGER INFOMSEXP_INSERT BEFORE INSERT ON INFOMSEXP BEGIN SELECT CASE
         
@@ -489,6 +490,14 @@ CREATE TRIGGER INFOMSEXP_INSERT BEFORE INSERT ON INFOMSEXP BEGIN SELECT CASE
             ABORT,
             '[sql-debug] Нет председателя врачебной комисси (подпункт п. 40)'
         )
+
+		WHEN --ТУТ дата выдачи направления на мед соц экспертизу - '01.02'
+        (
+            NEW.MSE_END = 'Y' AND
+            NEW.ELEMENT_NAME = '04.0' AND
+            (julianday(DATE('now', 'localtime')) - julianday(DATE(SUBSTR(NEW.ELEMENT_VALUE, 7, 4) || '-' || SUBSTR(NEW.ELEMENT_VALUE, 4, 2) || '-' || SUBSTR(NEW.ELEMENT_VALUE, 1, 2))) < 0 OR
+            (new.ELEMENT_VALUE = '' OR new.ELEMENT_VALUE = ' ' OR new.ELEMENT_VALUE = '&nbsp;'))
+        ) THEN RAISE(ABORT, '[sql-debug] Дата выдачи направления на медсоцэкспертизу (п. 04.0) не может пустой или будущей!')
 
         WHEN (
             (new.MSE_END = 'Y')
